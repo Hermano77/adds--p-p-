@@ -4,17 +4,11 @@ def format_file(input_path, output_path):
     with open(input_path, 'r', encoding='utf-8') as infile:
         lines = infile.readlines()
 
-    formatted_lines = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped:  # only if line is not empty
-            formatted_lines.append(f"</p><p>{stripped}")
-
-    # Join with newline character
-    result = "\n".join(formatted_lines)
-
     with open(output_path, 'w', encoding='utf-8') as outfile:
-        outfile.write(result)
+        for line in lines:
+            if line.strip():  # Only if line is not completely empty
+                outfile.write(f"</p><p>{line}")
+            # else: skip empty lines without adding anything
 
     print(f"Formatted file saved as: {output_path}")
 
