@@ -1,46 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Text Formatter App</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
-    input, button { margin: 10px 0; }
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+    .progress-bar {
+      width: 100%;
+      background-color: #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .progress-bar-fill {
+      height: 20px;
+      background-color: #4caf50;
+      width: 0%;
+      text-align: center;
+      color: white;
+      transition: width 0.4s ease;
+    }
+    .preview {
+      white-space: pre-wrap;
+      background: #fff;
+      padding: 10px;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      max-height: 300px;
+      overflow: auto;
+    }
   </style>
 </head>
 <body>
-  <h2>Text Formatter</h2>
-  <p>Upload a <code>.txt</code> file. This app will:</p>
-  <ul>
-    <li>Add <code>&lt;/p&gt;&lt;p&gt;</code> in front of each line</li>
-    <li>Leave a blank line after every two lines</li>
-  </ul>
 
-  <input type="file" id="fileInput" accept=".txt" /><br>
-  <button onclick="processFile()">Format & Download</button>
+  <h1>Text Formatter</h1>
+
+  <input type="file" id="fileInput" accept=".txt" />
+  <p id="fileStatus">No file selected</p>
+
+  <div class="progress-bar">
+    <div class="progress-bar-fill" id="progressBar">0%</div>
+  </div>
+
+  <button onclick="downloadFile()">Download Formatted Text</button>
+
+  <div class="preview" id="previewBox"></div>
 
   <script>
-    function processFile() {
-      const input = document.getElementById("fileInput");
-      if (!input.files.length) {
-        alert("Please upload a .txt file.");
+    let formattedText = "";
+
+    function formatText(content) {
+      const lines = content.split("\n");
+      let result = "";
+      for (let i = 0; i < lines.length; i++) {
+        result += "</p><p>" + lines[i].trim() + "\n";
+        if ((i + 1) % 2 === 0) {
+          result += "\n";
+        }
+      }
+      return result.trim();
+    }
+
+    function simulateProgress(callback) {
+      let progress = 0;
+      const interval = setInterval(() => {
+        if (progress >= 100) {
+          clearInterval(interval);
+          callback();
+        } else {
+          progress += Math.floor(Math.random() * 15);
+          if (progress > 100) progress = 100;
+          document.getElementById("progressBar").style.width = progress + "%";
+          document.getElementById("progressBar").innerText = progress + "%";
+        }
+      }, 200);
+    }
+
+    document.getElementById("fileInput").addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file) {
+        document.getElementById("fileStatus").innerText = "No file selected";
         return;
       }
 
-      const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const lines = e.target.result.split("\n");
-        let formatted = "";
-        for (let i = 0; i < lines.length; i += 2) {
-          formatted += `</p><p>${lines[i].trim()}\n`;
-          if (i + 1 < lines.length) {
-            formatted += `</p><p>${lines[i + 1].trim()}\n`;
-          }
-          formatted += "\n"; // blank line
-        }
+      document.getElementById("fileStatus").innerText = `Uploading: ${file.name}`;
+      simulateProgress(() => {
+        const reader = new FileReader();
+        reader.onload = function () {
+          formattedText = formatText(reader.result);
+          document.getElementById("fileStatus").innerText = "Upload complete ✔";
+          document.getElementById("previewBox").textContent = formattedText;
+        };
+        reader.readAsText(file, "UTF-8");
+      });
+    });
 
-        // Download
-        const blob = new Blob([formatted], { type: "text/plain" });
-        const link = document.createElement("a");
+    function downloadFile() {
+      if (!formattedText) {
+        alert("Please upload and process a file first.");
+        return;
+      }
+      const blob = new Blob([formattedText], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "formatted_output.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+
+</body>
+</html>
