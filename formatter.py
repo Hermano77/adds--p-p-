@@ -1,36 +1,28 @@
 import re
+import sys
+import os
 
-# Devanagari Unicode range regex
-DEVANAGARI_PATTERN = re.compile(r'[\u0900-\u097F]')
+# Function to check if a line contains Devanagari characters
+def contains_devanagari(text):
+    return re.search(r'[\u0900-\u097F]', text) is not None
 
+# Main formatter function
 def format_file(input_path, output_path):
     with open(input_path, 'r', encoding='utf-8') as infile:
-        raw_lines = infile.readlines()
+        lines = infile.readlines()
 
-    # Filter only lines that have visible Devanagari characters
-    valid_lines = []
-    for line in raw_lines:
-        stripped = line.strip()
-        if stripped and DEVANAGARI_PATTERN.search(stripped):
-            valid_lines.append(stripped)
-
-    # Write output with correct formatting
+    formatted_lines = []
+    for line in lines:
+        stripped_line = line.rstrip('\n')
+        if contains_devanagari(stripped_line):
+            formatted_lines.append(f"</p><p>{stripped_line}")
+    
     with open(output_path, 'w', encoding='utf-8') as outfile:
-        if valid_lines:
-            outfile.write("<p>")
-            for i, line in enumerate(valid_lines):
-                if i < len(valid_lines) - 1:
-                    outfile.write(f"{line}<br>\n")
-                else:
-                    outfile.write(f"{line}</p>\n")
-        else:
-            outfile.write("")  # Empty output if no valid lines
+        outfile.write('\n'.join(formatted_lines))
 
-    print(f"✅ Done. Output saved to: {output_path}")
+    print(f"Formatted file saved as: {output_path}")
 
+# Script entry point
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 3:
-        print("Usage: python formatter.py input.txt output.txt")
-    else:
-        format_file(sys.argv[1], sys.argv[2])
+    if len(sys.argv) < 2:
+        print("Usage: python formatter.py
