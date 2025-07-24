@@ -1,33 +1,33 @@
 import re
 
-# Regular expression to detect Devanagari characters (U+0900 to U+097F)
+# Devanagari Unicode range regex
 DEVANAGARI_PATTERN = re.compile(r'[\u0900-\u097F]')
 
 def format_file(input_path, output_path):
     with open(input_path, 'r', encoding='utf-8') as infile:
-        lines = infile.readlines()
+        raw_lines = infile.readlines()
 
-    # Filter out lines without Devanagari characters
+    # Filter only lines that have visible Devanagari characters
     valid_lines = []
-    for line in lines:
-        clean_line = line.strip()
-        if DEVANAGARI_PATTERN.search(clean_line):
-            valid_lines.append(clean_line)
+    for line in raw_lines:
+        stripped = line.strip()
+        if stripped and DEVANAGARI_PATTERN.search(stripped):
+            valid_lines.append(stripped)
 
-    # Format output as a single <p> block with <br> at end of each line except the last
-    if valid_lines:
-        with open(output_path, 'w', encoding='utf-8') as outfile:
+    # Write output with correct formatting
+    with open(output_path, 'w', encoding='utf-8') as outfile:
+        if valid_lines:
             outfile.write("<p>")
             for i, line in enumerate(valid_lines):
                 if i < len(valid_lines) - 1:
                     outfile.write(f"{line}<br>\n")
                 else:
                     outfile.write(f"{line}</p>\n")
-        print(f"✅ Formatted file saved to: {output_path}")
-    else:
-        print("⚠️ No valid Devanagari lines found.")
+        else:
+            outfile.write("")  # Empty output if no valid lines
 
-# Entry point
+    print(f"✅ Done. Output saved to: {output_path}")
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 3:
