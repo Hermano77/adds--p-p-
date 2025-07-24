@@ -1,26 +1,22 @@
 import re
 
-# Regex to remove all invisible or whitespace characters
-INVISIBLE_CHARS = re.compile(r'[\u200b\u200c\u200d\u200e\u200f\ufeff\xa0]')
+# All zero-width and invisible Unicode characters
+INVISIBLE_UNICODE_PATTERN = re.compile(r'[\u200b\u200c\u200d\u200e\u200f\ufeff\xa0]')
 
-def clean_line(line):
-    # Remove all invisible Unicode characters but keep original spaces and newlines
-    return INVISIBLE_CHARS.sub('', line)
-
-def is_meaningful(line):
-    # After cleaning, check if any visible characters remain
-    return bool(line.strip())
-
-def format_file(input_path, output_path):
+def clean_and_format_file(input_path, output_path):
     with open(input_path, 'r', encoding='utf-8') as infile:
-        cleaned_lines = []
-        for line in infile:
-            clean = clean_line(line)
-            if is_meaningful(clean):
-                cleaned_lines.append(clean)
+        raw_lines = infile.readlines()
 
     with open(output_path, 'w', encoding='utf-8') as outfile:
-        for line in cleaned_lines:
-            outfile.write(f"</p><p>{line}")
+        for line in raw_lines:
+            # Remove invisible characters
+            cleaned_line = INVISIBLE_UNICODE_PATTERN.sub('', line)
 
-    print(f"Formatted and cleaned file saved as: {output_path}")
+            # Remove leading/trailing whitespace
+            cleaned_line = cleaned_line.strip()
+
+            # Only keep lines that have visible content
+            if cleaned_line:
+                outfile.write(f"</p><p>{cleaned_line}\n")
+
+    print(f"✅ Cleaned and formatted file saved as: {output_path}")
