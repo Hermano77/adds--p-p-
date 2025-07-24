@@ -1,18 +1,26 @@
 import re
 
-# Define what counts as a meaningful line
+# Regex to remove all invisible or whitespace characters
+INVISIBLE_CHARS = re.compile(r'[\u200b\u200c\u200d\u200e\u200f\ufeff\xa0]')
+
+def clean_line(line):
+    # Remove all invisible Unicode characters but keep original spaces and newlines
+    return INVISIBLE_CHARS.sub('', line)
+
 def is_meaningful(line):
-    # Remove whitespace and invisible Unicode characters
-    cleaned = re.sub(r'[\s\u200c\u200b\u200e\u200f\ufeff\xa0]+', '', line)
-    return bool(cleaned)
+    # After cleaning, check if any visible characters remain
+    return bool(line.strip())
 
 def format_file(input_path, output_path):
     with open(input_path, 'r', encoding='utf-8') as infile:
-        # Filter and keep only meaningful lines
-        meaningful_lines = [line for line in infile if is_meaningful(line)]
+        cleaned_lines = []
+        for line in infile:
+            clean = clean_line(line)
+            if is_meaningful(clean):
+                cleaned_lines.append(clean)
 
     with open(output_path, 'w', encoding='utf-8') as outfile:
-        for line in meaningful_lines:
+        for line in cleaned_lines:
             outfile.write(f"</p><p>{line}")
 
-    print(f"Formatted file saved as: {output_path}")
+    print(f"Formatted and cleaned file saved as: {output_path}")
